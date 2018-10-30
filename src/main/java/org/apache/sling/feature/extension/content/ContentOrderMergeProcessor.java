@@ -22,34 +22,15 @@ import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.FeatureConstants;
 import org.apache.sling.feature.KeyValueMap;
-import org.apache.sling.feature.builder.FeatureExtensionHandler;
+import org.apache.sling.feature.builder.HandlerContext;
+import org.apache.sling.feature.builder.PostProcessHandler;
 
-public class ContentOrderMergeProcessor implements FeatureExtensionHandler {
-    
+public class ContentOrderMergeProcessor implements PostProcessHandler {
+
     private static final String DEFAULT_CONTENT_START_ORDER = "default.content.startorder";
 
-    /**
-     * Only postprocessing - relying on default merge strategy
-     * (non-Javadoc)
-     * @see org.apache.sling.feature.builder.FeatureExtensionHandler#canMerge(org.apache.sling.feature.Extension)
-     */
     @Override
-    public boolean canMerge(Extension extension) {
-        return false;
-    }
-
-    /*
-     * Only postprocessing - relying on default merge strategy
-     * (non-Javadoc)
-     * @see org.apache.sling.feature.builder.FeatureExtensionHandler#merge(org.apache.sling.feature.Feature, org.apache.sling.feature.Feature, org.apache.sling.feature.Extension)
-     */
-    @Override
-    public void merge(Feature target, Feature source, Extension extension) {
-        // not merging
-    }
-
-    @Override
-    public void postProcess(Feature feature, Extension extension) {
+    public void postProcess(HandlerContext context, Feature feature, Extension extension) {
         if (extension.getType() == ExtensionType.ARTIFACTS
                 && extension.getName().equals(FeatureConstants.EXTENSION_NAME_CONTENT_PACKAGES)) {
             String defaultOrder = feature.getVariables().get(DEFAULT_CONTENT_START_ORDER);
