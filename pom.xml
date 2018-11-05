@@ -55,14 +55,44 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <minimizeJar>true</minimizeJar>
-                            <filters>
+                          <minimizeJar>true</minimizeJar>
+                          <filters>
                             <filter>
                               <includes>
                                 <include>org.apache.commons:collections:*</include>
                               </includes>
-                              </filter>
-                            </filters>
+                            </filter>
+                          </filters>
+                          <relocations>
+                            <relocation>
+                              <pattern>javax.jcr</pattern>
+                              <shadedPattern>shaded.javax.jcr</shadedPattern>
+                              <includes>
+                                <include>javax.jcr.**</include>
+                              </includes>
+                            </relocation>
+                            <relocation>
+                              <pattern>org.slf4j</pattern>
+                              <shadedPattern>shaded.org.slf4j</shadedPattern>
+                              <includes>
+                                <include>org.slf4j.**</include>
+                              </includes>
+                            </relocation>
+                            <relocation>
+                              <pattern>org.osgi</pattern>
+                              <shadedPattern>shaded.org.osgi</shadedPattern>
+                              <includes>
+                                <include>org.osgi.**</include>
+                              </includes>
+                            </relocation>
+                            <relocation>
+                              <pattern>org.apache</pattern>
+                              <shadedPattern>shaded.org.apache</shadedPattern>
+                              <excludes>
+                                <exclude>org.apache.sling.feature.**</exclude>
+                              </excludes>
+                            </relocation>
+                          </relocations>
                         </configuration>
                     </execution>
                 </executions>
@@ -88,19 +118,19 @@
            <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.feature.launcher</artifactId>
-            <version>0.1.1-SNAPSHOT</version>
+            <version>0.2.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.feature.io</artifactId>
-            <version>0.1.3-SNAPSHOT</version>
+            <version>0.2.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.feature</artifactId>
-            <version>0.1.3-SNAPSHOT</version>
+            <version>0.2.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
