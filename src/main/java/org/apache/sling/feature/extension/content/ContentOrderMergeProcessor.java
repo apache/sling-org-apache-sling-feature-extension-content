@@ -23,25 +23,50 @@ import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.FeatureConstants;
 import org.apache.sling.feature.KeyValueMap;
 import org.apache.sling.feature.builder.HandlerContext;
+import org.apache.sling.feature.builder.MergeHandler;
 import org.apache.sling.feature.builder.PostProcessHandler;
 
-public class ContentOrderMergeProcessor implements PostProcessHandler {
+public class ContentOrderMergeProcessor implements MergeHandler {
 
     private static final String DEFAULT_CONTENT_START_ORDER = "default.content.startorder";
 
-    @Override
-    public void postProcess(HandlerContext context, Feature feature, Extension extension) {
-        if (extension.getType() == ExtensionType.ARTIFACTS
-                && extension.getName().equals(FeatureConstants.EXTENSION_NAME_CONTENT_PACKAGES)) {
-            String defaultOrder = feature.getVariables().get(DEFAULT_CONTENT_START_ORDER);
-            if (defaultOrder != null) {
-                for (Artifact a : extension.getArtifacts()) {
-                    KeyValueMap kvm = a.getMetadata();
-                    if(kvm.get(Artifact.KEY_START_ORDER) == null) {
-                        kvm.put(Artifact.KEY_START_ORDER, defaultOrder);
-                    }
+    private void processFeature(HandlerContext context, Feature feature, Extension extension) {
+        String defaultOrder = feature.getVariables().get(DEFAULT_CONTENT_START_ORDER);
+        if (defaultOrder != null) {
+            for (Artifact a : extension.getArtifacts()) {
+                KeyValueMap kvm = a.getMetadata();
+                if(kvm.get(Artifact.KEY_START_ORDER) == null) {
+                    kvm.put(Artifact.KEY_START_ORDER, defaultOrder);
                 }
-                feature.getVariables().remove(DEFAULT_CONTENT_START_ORDER);
+            }
+            feature.getVariables().remove(DEFAULT_CONTENT_START_ORDER);
+        }
+    }
+
+    @Override
+    public boolean canMerge(Extension extension) {
+        return extension.getType() == ExtensionType.ARTIFACTS
+                && extension.getName().equals(FeatureConstants.EXTENSION_NAME_CONTENT_PACKAGES);
+    }
+
+    @Override
+    public void merge(HandlerContext context, Feature target, Feature source, Extension targetEx, Extension sourceEx) {
+        if (targetEx == null) {
+            target.getExtensions().add(sourceEx);
+            return;
+        }
+        processFeature(context, target, targetEx);
+        processFeature(context, source, sourceEx);
+        for (final Artifact a : sourceEx.getArtifacts()) {
+            boolean replace = true;
+            final Artifact existing = targetEx.getArtifacts().getSame(a.getId());
+            if (existing != null && existing.getId().getOSGiVersion().compareTo(a.getId().getOSGiVersion()) > 0) {
+                replace = false;
+            }
+
+            if (replace) {
+                targetEx.getArtifacts().removeSame(a.getId());
+                targetEx.getArtifacts().add(a);
             }
         }
     }
