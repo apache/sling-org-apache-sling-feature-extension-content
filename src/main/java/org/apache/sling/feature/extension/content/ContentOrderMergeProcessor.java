@@ -51,6 +51,9 @@ public class ContentOrderMergeProcessor implements MergeHandler {
 
     @Override
     public void merge(HandlerContext context, Feature target, Feature source, Extension targetEx, Extension sourceEx) {
+        if (target == null) {
+            return;
+        }
         processFeature(context, target, targetEx);
         processFeature(context, source, sourceEx);
         for (final Artifact a : sourceEx.getArtifacts()) {
