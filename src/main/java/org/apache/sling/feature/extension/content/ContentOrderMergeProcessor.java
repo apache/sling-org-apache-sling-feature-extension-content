@@ -24,13 +24,15 @@ import org.apache.sling.feature.FeatureConstants;
 import org.apache.sling.feature.KeyValueMap;
 import org.apache.sling.feature.builder.HandlerContext;
 import org.apache.sling.feature.builder.MergeHandler;
-import org.apache.sling.feature.builder.PostProcessHandler;
 
 public class ContentOrderMergeProcessor implements MergeHandler {
 
-    private static final String DEFAULT_CONTENT_START_ORDER = "default.content.startorder";
+    public static final String DEFAULT_CONTENT_START_ORDER = "default.content.startorder";
 
-    private void processFeature(HandlerContext context, Feature feature, Extension extension) {
+    private void processFeature(Feature feature, Extension extension) {
+        if (feature == null) {
+            return;
+        }
         String defaultOrder = feature.getVariables().get(DEFAULT_CONTENT_START_ORDER);
         if (defaultOrder != null) {
             for (Artifact a : extension.getArtifacts()) {
@@ -51,12 +53,14 @@ public class ContentOrderMergeProcessor implements MergeHandler {
 
     @Override
     public void merge(HandlerContext context, Feature target, Feature source, Extension targetEx, Extension sourceEx) {
+
+        processFeature(target, targetEx);
+        processFeature(source, sourceEx);
+
         if (targetEx == null) {
             target.getExtensions().add(sourceEx);
             return;
         }
-        processFeature(context, target, targetEx);
-        processFeature(context, source, sourceEx);
         for (final Artifact a : sourceEx.getArtifacts()) {
             boolean replace = true;
             final Artifact existing = targetEx.getArtifacts().getSame(a.getId());
