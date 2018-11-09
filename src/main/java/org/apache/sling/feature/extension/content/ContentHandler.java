@@ -21,9 +21,12 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
+
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.commons.collections.map.MultiValueMap;
 import org.apache.jackrabbit.vault.packaging.PackageId;
@@ -48,7 +51,7 @@ public class ContentHandler implements ExtensionHandler {
 
     private static final String REGISTRY_FOLDER = "packageregistry";
 
-    private static ExecutionPlanBuilder buildExecutionPlan(Collection<Artifact> artifacts, LauncherPrepareContext prepareContext, File registryHome) throws Exception {
+    private static ExecutionPlanBuilder buildExecutionPlan(Collection<Artifact> artifacts, Set<PackageId> satisfiedPackages, LauncherPrepareContext prepareContext, File registryHome) throws Exception {
 
         List<File> packageReferences = new ArrayList<File>();
 
@@ -67,6 +70,7 @@ public class ContentHandler implements ExtensionHandler {
         FSPackageRegistry registry = new FSPackageRegistry(registryHome);
 
         ExecutionPlanBuilder builder = registry.createExecutionPlan();
+        builder.with(satisfiedPackages);
 
         for (File pkgFile : packageReferences) {
             PackageId pid = registry.registerExternal(pkgFile, true);
@@ -83,6 +87,7 @@ public class ContentHandler implements ExtensionHandler {
             builder.addTask().with(pid).with(Type.EXTRACT);
         }
         builder.validate();
+        satisfiedPackages.addAll(builder.preview());
         return builder;
 
     }
@@ -93,7 +98,7 @@ public class ContentHandler implements ExtensionHandler {
         File registryHome = getRegistryHomeDir(installationContext);
         if (extension.getType() == ExtensionType.ARTIFACTS
                 && extension.getName().equals(FeatureConstants.EXTENSION_NAME_CONTENT_PACKAGES)) {
-            MultiValueMap orderedArtifacts = MultiValueMap.decorate(new LinkedHashMap<Integer, Collection<Artifact>>());
+            MultiValueMap orderedArtifacts = MultiValueMap.decorate(new TreeMap<Integer, Collection<Artifact>>());
             for (final Artifact a : extension.getArtifacts()) {
                 int order;
                 // content-packages without explicit start-order to be installed last
@@ -105,10 +110,11 @@ public class ContentHandler implements ExtensionHandler {
                 orderedArtifacts.put(order, a);
             }
             List<String> executionPlans = new ArrayList<String>();
+            Set<PackageId> satisfiedPackages = new HashSet<>();
             for (Object key : orderedArtifacts.keySet()) {
                 @SuppressWarnings("unchecked")
                 Collection<Artifact> artifacts = orderedArtifacts.getCollection(key);
-                ExecutionPlanBuilder builder = buildExecutionPlan(artifacts, prepareContext, registryHome);
+                ExecutionPlanBuilder builder = buildExecutionPlan(artifacts, satisfiedPackages,  prepareContext, registryHome);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 builder.save(baos);
                 executionPlans.add(baos.toString("UTF-8"));

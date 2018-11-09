@@ -112,7 +112,7 @@
         <dependency>
             <groupId>org.apache.jackrabbit.vault</groupId>
             <artifactId>org.apache.jackrabbit.vault</artifactId>
-            <version>3.2.4</version>
+            <version>3.2.5-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
            <dependency>
