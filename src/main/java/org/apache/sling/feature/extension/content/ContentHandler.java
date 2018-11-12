@@ -119,11 +119,12 @@ public class ContentHandler implements ExtensionHandler {
                 builder.save(baos);
                 executionPlans.add(baos.toString("UTF-8"));
             }
-            final Configuration initcfg = new Configuration("org.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer");
+            // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156 
+            final Configuration initcfg = new Configuration("org.UNSHADE.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer");
             initcfg.getProperties().put("executionplans", executionPlans.toArray(new String[executionPlans.size()]));
             installationContext.addConfiguration(initcfg.getPid(), initcfg.getFactoryPid(), initcfg.getProperties());
-            
-            final Configuration registrycfg = new Configuration("org.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry");
+         // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156 
+            final Configuration registrycfg = new Configuration("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry");
             registrycfg.getProperties().put("homePath", REGISTRY_FOLDER);
             installationContext.addConfiguration(registrycfg.getPid(), registrycfg.getFactoryPid(), registrycfg.getProperties());;
 

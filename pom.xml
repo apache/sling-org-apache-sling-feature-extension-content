@@ -92,6 +92,10 @@
                                 <exclude>org.apache.sling.feature.**</exclude>
                               </excludes>
                             </relocation>
+                            <relocation>
+                              <pattern>org.UNSHADE.apache</pattern>
+                              <shadedPattern>org.apache</shadedPattern>
+                            </relocation>
                           </relocations>
                         </configuration>
                     </execution>
