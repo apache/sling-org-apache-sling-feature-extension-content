@@ -30,7 +30,7 @@ public class ContentOrderMergeProcessor implements MergeHandler {
     public static final String DEFAULT_CONTENT_START_ORDER = "default.content.startorder";
 
     private void processFeature(Feature feature, Extension extension) {
-        if (feature == null) {
+        if (feature == null || extension == null) {
             return;
         }
         String defaultOrder = feature.getVariables().get(DEFAULT_CONTENT_START_ORDER);
