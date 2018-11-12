@@ -105,8 +105,8 @@ public class ContentHandlerTest {
         ArgumentCaptor<Dictionary<String, Object>> executionPlanCaptor = ArgumentCaptor.forClass(Dictionary.class);
         
         ch.handle(ext, prepareContext, installationContext);
-        verify(installationContext).addConfiguration(eq("org.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer"), any(), executionPlanCaptor.capture());
-        verify(installationContext).addConfiguration(eq("org.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry"), any(), any());
+        verify(installationContext).addConfiguration(eq("org.UNSHADE.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer"), any(), executionPlanCaptor.capture());
+        verify(installationContext).addConfiguration(eq("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry"), any(), any());
         Iterator<Dictionary<String, Object>> dictIt = executionPlanCaptor.getAllValues().iterator();
         final String[] executionplans = (String[]) dictIt.next().get("executionplans");
         final String expected_0 =
