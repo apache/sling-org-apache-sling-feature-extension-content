@@ -125,7 +125,7 @@ public class ContentHandler implements ExtensionHandler {
             installationContext.addConfiguration(initcfg.getPid(), initcfg.getFactoryPid(), initcfg.getProperties());
          // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156 
             final Configuration registrycfg = new Configuration("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry");
-            registrycfg.getProperties().put("homePath", REGISTRY_FOLDER);
+            registrycfg.getProperties().put("homePath", registryHome.getPath());
             installationContext.addConfiguration(registrycfg.getPid(), registrycfg.getFactoryPid(), registrycfg.getProperties());;
 
             return true;
