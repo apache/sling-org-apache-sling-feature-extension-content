@@ -57,7 +57,7 @@ public class ContentHandler implements ExtensionHandler {
 
         for (final Artifact a : artifacts) {
             final File file = prepareContext.getArtifactFile(a.getId());
-            if (file.exists()) {
+            if (file.exists() && file.length() > 0) {
                 packageReferences.add(file);
             }
 
