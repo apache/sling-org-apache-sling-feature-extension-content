@@ -21,9 +21,10 @@ import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
 import org.apache.sling.feature.FeatureConstants;
-import org.apache.sling.feature.KeyValueMap;
 import org.apache.sling.feature.builder.HandlerContext;
 import org.apache.sling.feature.builder.MergeHandler;
+
+import java.util.Map;
 
 public class ContentOrderMergeProcessor implements MergeHandler {
 
@@ -36,7 +37,7 @@ public class ContentOrderMergeProcessor implements MergeHandler {
         String defaultOrder = feature.getVariables().get(DEFAULT_CONTENT_START_ORDER);
         if (defaultOrder != null) {
             for (Artifact a : extension.getArtifacts()) {
-                KeyValueMap kvm = a.getMetadata();
+                Map<String,String> kvm = a.getMetadata();
                 if(kvm.get(Artifact.KEY_START_ORDER) == null) {
                     kvm.put(Artifact.KEY_START_ORDER, defaultOrder);
                 }
