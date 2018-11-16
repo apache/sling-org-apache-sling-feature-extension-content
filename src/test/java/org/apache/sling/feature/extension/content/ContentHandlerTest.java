@@ -108,7 +108,11 @@ public class ContentHandlerTest {
         verify(installationContext).addConfiguration(eq("org.UNSHADE.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer"), any(), executionPlanCaptor.capture());
         verify(installationContext).addConfiguration(eq("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry"), any(), any());
         Iterator<Dictionary<String, Object>> dictIt = executionPlanCaptor.getAllValues().iterator();
-        final String[] executionplans = (String[]) dictIt.next().get("executionplans");
+        Dictionary<String, Object> dict = dictIt.next();
+        final String[] executionplans = (String[]) dict.get("executionplans");
+        final String statusFileHome = (String)dict.get("statusfilepath");
+        File executedPlansFile = new File(testFolder.getRoot(), "executedplans.file");
+        assertEquals(executedPlansFile.getAbsolutePath(), statusFileHome);
         final String expected_0 =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                         "<executionPlan version=\"1.0\">\n" +
