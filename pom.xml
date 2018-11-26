@@ -82,7 +82,7 @@
                               <pattern>org.osgi</pattern>
                               <shadedPattern>shaded.org.osgi</shadedPattern>
                               <includes>
-                                <include>org.osgi.**</include>
+                                <include>org.osgi.util.**</include>
                               </includes>
                             </relocation>
                             <relocation>
