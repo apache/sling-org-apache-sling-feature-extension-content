@@ -20,7 +20,6 @@ import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.Feature;
-import org.apache.sling.feature.FeatureConstants;
 import org.apache.sling.feature.builder.HandlerContext;
 import org.apache.sling.feature.builder.MergeHandler;
 
@@ -49,7 +48,7 @@ public class ContentOrderMergeProcessor implements MergeHandler {
     @Override
     public boolean canMerge(Extension extension) {
         return extension.getType() == ExtensionType.ARTIFACTS
-                && extension.getName().equals(FeatureConstants.EXTENSION_NAME_CONTENT_PACKAGES);
+                && extension.getName().equals(Extension.EXTENSION_NAME_CONTENT_PACKAGES);
     }
 
     @Override

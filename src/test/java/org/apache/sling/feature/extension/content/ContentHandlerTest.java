@@ -18,6 +18,7 @@ package org.apache.sling.feature.extension.content;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
@@ -30,6 +31,7 @@ import java.util.Iterator;
 
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
+import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.launcher.spi.LauncherPrepareContext;
@@ -45,17 +47,17 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ContentHandlerTest {
-    
+
 
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
-    
+
     @Mock
     LauncherPrepareContext prepareContext;
-    
+
     @Mock
     ExtensionInstallationContext installationContext;
-    
+
     /**
      * Test package A-1.0. Depends on B and C-1.X
      */
@@ -103,7 +105,7 @@ public class ContentHandlerTest {
         ext.getArtifacts().add(artifact_c);
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Dictionary<String, Object>> executionPlanCaptor = ArgumentCaptor.forClass(Dictionary.class);
-        
+
         ch.handle(ext, prepareContext, installationContext);
         verify(installationContext).addConfiguration(eq("org.UNSHADE.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer"), any(), executionPlanCaptor.capture());
         verify(installationContext).addConfiguration(eq("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry"), any(), any());
@@ -125,5 +127,29 @@ public class ContentHandlerTest {
 
         assertEquals(expected_1, executionplans[1]);
         assertFalse(dictIt.hasNext());
+    }
+
+    @Test
+    public void testGetConfigPidNormal() {
+        Configuration cfg = new Configuration("a.b.c");
+        assertEquals("a.b.c", ContentHandler.getPid(cfg));
+    }
+
+    @Test
+    public void testGetConfigPidFactory() {
+        Configuration cfg = new Configuration("a.b.c~d");
+        assertEquals("a.b.c", ContentHandler.getPid(cfg));
+    }
+
+    @Test
+    public void testGetFactoryPidNormal() {
+        Configuration cfg = new Configuration("a.b.c");
+        assertNull(ContentHandler.getFactoryPid(cfg));
+    }
+
+    @Test
+    public void testGetFactoryPidFactory() {
+        Configuration cfg = new Configuration("a.b.c~d");
+        assertEquals("a.b.c~d", ContentHandler.getFactoryPid(cfg));
     }
 }

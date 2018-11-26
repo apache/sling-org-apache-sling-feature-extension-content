@@ -22,7 +22,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,14 +37,14 @@ import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.FeatureConstants;
 import org.apache.sling.feature.launcher.spi.LauncherPrepareContext;
 import org.apache.sling.feature.launcher.spi.extensions.ExtensionHandler;
 import org.apache.sling.feature.launcher.spi.extensions.ExtensionInstallationContext;
 
 public class ContentHandler implements ExtensionHandler {
-    
     public static final String PACKAGEREGISTRY_HOME = "packageregistry.home";
+
+    private static final char FACTORY_CONFIG_SEPARATOR = '~';
 
     private static final String REPOSITORY_HOME = "repository.home";
 
@@ -62,7 +61,7 @@ public class ContentHandler implements ExtensionHandler {
             }
 
         }
-        
+
         if(!registryHome.exists()) {
             registryHome.mkdirs();
         }
@@ -97,7 +96,7 @@ public class ContentHandler implements ExtensionHandler {
             ExtensionInstallationContext installationContext) throws Exception {
         File registryHome = getRegistryHomeDir(installationContext);
         if (extension.getType() == ExtensionType.ARTIFACTS
-                && extension.getName().equals(FeatureConstants.EXTENSION_NAME_CONTENT_PACKAGES)) {
+                && extension.getName().equals(Extension.EXTENSION_NAME_CONTENT_PACKAGES)) {
             MultiValueMap orderedArtifacts = MultiValueMap.decorate(new TreeMap<Integer, Collection<Artifact>>());
             for (final Artifact a : extension.getArtifacts()) {
                 int order;
@@ -119,14 +118,14 @@ public class ContentHandler implements ExtensionHandler {
                 builder.save(baos);
                 executionPlans.add(baos.toString("UTF-8"));
             }
-            // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156 
+            // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
             final Configuration initcfg = new Configuration("org.UNSHADE.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer");
             initcfg.getProperties().put("executionplans", executionPlans.toArray(new String[executionPlans.size()]));
-            installationContext.addConfiguration(initcfg.getPid(), initcfg.getFactoryPid(), initcfg.getProperties());
-         // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156 
+            installationContext.addConfiguration(getPid(initcfg), getFactoryPid(initcfg), initcfg.getProperties());
+            // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
             final Configuration registrycfg = new Configuration("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry");
             registrycfg.getProperties().put("homePath", registryHome.getPath());
-            installationContext.addConfiguration(registrycfg.getPid(), registrycfg.getFactoryPid(), registrycfg.getProperties());;
+            installationContext.addConfiguration(getPid(registrycfg), getFactoryPid(registrycfg), registrycfg.getProperties());
 
             return true;
         }
@@ -146,7 +145,7 @@ public class ContentHandler implements ExtensionHandler {
             String repoHome = installationContext.getFrameworkProperties().get(REPOSITORY_HOME);
             if (repoHome == null) {
                 throw new IllegalStateException("Neither registry.home set nor repository.home configured.");
-            } 
+            }
             registryHome = Paths.get(repoHome, REGISTRY_FOLDER).toFile();
         }
         if (!registryHome.exists()) {
@@ -156,5 +155,22 @@ public class ContentHandler implements ExtensionHandler {
             throw new IllegalStateException("Registry but points to file - must be directory");
         }
         return registryHome;
+    }
+
+    static String getPid(Configuration cfg) {
+        String pid = cfg.getPid();
+        int idx = pid.indexOf(FACTORY_CONFIG_SEPARATOR);
+        if (idx > 0)
+            return pid.substring(0, idx);
+        else
+            return pid;
+    }
+
+    static String getFactoryPid(Configuration cfg) {
+        String pid = cfg.getPid();
+        if (pid.indexOf(FACTORY_CONFIG_SEPARATOR) > 0)
+            return pid;
+        else
+            return null;
     }
 }
