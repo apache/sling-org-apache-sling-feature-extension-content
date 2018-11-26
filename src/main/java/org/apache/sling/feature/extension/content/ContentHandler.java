@@ -121,11 +121,11 @@ public class ContentHandler implements ExtensionHandler {
             // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
             final Configuration initcfg = new Configuration("org.UNSHADE.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer");
             initcfg.getProperties().put("executionplans", executionPlans.toArray(new String[executionPlans.size()]));
-            installationContext.addConfiguration(getPid(initcfg), getFactoryPid(initcfg), initcfg.getProperties());
+            installationContext.addConfiguration(initcfg.getPid(), null, initcfg.getProperties());
             // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
             final Configuration registrycfg = new Configuration("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry");
             registrycfg.getProperties().put("homePath", registryHome.getPath());
-            installationContext.addConfiguration(getPid(registrycfg), getFactoryPid(registrycfg), registrycfg.getProperties());
+            installationContext.addConfiguration(registrycfg.getPid(), null, registrycfg.getProperties());
 
             return true;
         }
@@ -155,22 +155,5 @@ public class ContentHandler implements ExtensionHandler {
             throw new IllegalStateException("Registry but points to file - must be directory");
         }
         return registryHome;
-    }
-
-    static String getPid(Configuration cfg) {
-        String pid = cfg.getPid();
-        int idx = pid.indexOf(FACTORY_CONFIG_SEPARATOR);
-        if (idx > 0)
-            return pid.substring(0, idx);
-        else
-            return pid;
-    }
-
-    static String getFactoryPid(Configuration cfg) {
-        String pid = cfg.getPid();
-        if (pid.indexOf(FACTORY_CONFIG_SEPARATOR) > 0)
-            return pid;
-        else
-            return null;
     }
 }

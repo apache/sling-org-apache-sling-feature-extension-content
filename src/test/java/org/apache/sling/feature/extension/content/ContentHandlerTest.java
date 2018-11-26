@@ -18,7 +18,6 @@ package org.apache.sling.feature.extension.content;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
@@ -31,7 +30,6 @@ import java.util.Iterator;
 
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
-import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.launcher.spi.LauncherPrepareContext;
@@ -127,29 +125,5 @@ public class ContentHandlerTest {
 
         assertEquals(expected_1, executionplans[1]);
         assertFalse(dictIt.hasNext());
-    }
-
-    @Test
-    public void testGetConfigPidNormal() {
-        Configuration cfg = new Configuration("a.b.c");
-        assertEquals("a.b.c", ContentHandler.getPid(cfg));
-    }
-
-    @Test
-    public void testGetConfigPidFactory() {
-        Configuration cfg = new Configuration("a.b.c~d");
-        assertEquals("a.b.c", ContentHandler.getPid(cfg));
-    }
-
-    @Test
-    public void testGetFactoryPidNormal() {
-        Configuration cfg = new Configuration("a.b.c");
-        assertNull(ContentHandler.getFactoryPid(cfg));
-    }
-
-    @Test
-    public void testGetFactoryPidFactory() {
-        Configuration cfg = new Configuration("a.b.c~d");
-        assertEquals("a.b.c~d", ContentHandler.getFactoryPid(cfg));
     }
 }
