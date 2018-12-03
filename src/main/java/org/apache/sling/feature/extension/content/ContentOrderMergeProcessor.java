@@ -58,7 +58,7 @@ public class ContentOrderMergeProcessor implements MergeHandler {
         processFeature(source, sourceEx);
 
         if (targetEx == null) {
-            target.getExtensions().add(sourceEx);
+            target.getExtensions().add(sourceEx.copy());
             return;
         }
         for (final Artifact a : sourceEx.getArtifacts()) {
@@ -70,7 +70,7 @@ public class ContentOrderMergeProcessor implements MergeHandler {
 
             if (replace) {
                 targetEx.getArtifacts().removeSame(a.getId());
-                targetEx.getArtifacts().add(a);
+                targetEx.getArtifacts().add(a.copy(a.getId()));
             }
         }
     }
