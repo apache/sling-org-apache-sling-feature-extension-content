@@ -44,8 +44,6 @@ import org.apache.sling.feature.launcher.spi.extensions.ExtensionInstallationCon
 public class ContentHandler implements ExtensionHandler {
     public static final String PACKAGEREGISTRY_HOME = "packageregistry.home";
 
-    private static final char FACTORY_CONFIG_SEPARATOR = '~';
-
     private static final String REPOSITORY_HOME = "repository.home";
 
     private static final String REGISTRY_FOLDER = "packageregistry";
@@ -121,6 +119,7 @@ public class ContentHandler implements ExtensionHandler {
             // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
             final Configuration initcfg = new Configuration("org.UNSHADE.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer");
             initcfg.getProperties().put("executionplans", executionPlans.toArray(new String[executionPlans.size()]));
+            initcfg.getProperties().put("statusfilepath", registryHome.getAbsolutePath() + "/executedplans.file");
             installationContext.addConfiguration(initcfg.getPid(), null, initcfg.getProperties());
             // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
             final Configuration registrycfg = new Configuration("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry");
