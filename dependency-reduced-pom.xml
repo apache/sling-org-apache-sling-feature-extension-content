@@ -148,6 +148,7 @@
     </dependency>
   </dependencies>
   <properties>
+    <surefire.plugin.version>3.0.0-M3</surefire.plugin.version>
     <jdk.version>8</jdk.version>
   </properties>
 </project>
