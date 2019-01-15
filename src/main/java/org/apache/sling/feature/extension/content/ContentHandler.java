@@ -18,6 +18,7 @@ package org.apache.sling.feature.extension.content;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -71,15 +72,7 @@ public class ContentHandler implements ExtensionHandler {
 
         for (File pkgFile : packageReferences) {
             PackageId pid = registry.registerExternal(pkgFile, true);
-            Map<PackageId, SubPackageHandling.Option> subPkgs = registry.getInstallState(pid).getSubPackages();
-            if (!subPkgs.isEmpty()) {
-                for (PackageId subId : subPkgs.keySet()) {
-                    SubPackageHandling.Option opt = subPkgs.get(subId);
-                    if (opt != SubPackageHandling.Option.IGNORE) {
-                        builder.addTask().with(subId).with(Type.EXTRACT);
-                    }
-                }
-            }
+            extractSubPackages(registry, builder, pid);
 
             builder.addTask().with(pid).with(Type.EXTRACT);
         }
@@ -87,6 +80,20 @@ public class ContentHandler implements ExtensionHandler {
         satisfiedPackages.addAll(builder.preview());
         return builder;
 
+    }
+
+    private static void extractSubPackages(FSPackageRegistry registry, ExecutionPlanBuilder builder, PackageId pid)
+            throws IOException {
+        Map<PackageId, SubPackageHandling.Option> subPkgs = registry.getInstallState(pid).getSubPackages();
+        if (!subPkgs.isEmpty()) {
+            for (PackageId subId : subPkgs.keySet()) {
+                SubPackageHandling.Option opt = subPkgs.get(subId);
+                if (opt != SubPackageHandling.Option.IGNORE) {
+                    builder.addTask().with(subId).with(Type.EXTRACT);
+                    extractSubPackages(registry, builder, subId);
+                }
+            }
+        }
     }
 
     @Override
