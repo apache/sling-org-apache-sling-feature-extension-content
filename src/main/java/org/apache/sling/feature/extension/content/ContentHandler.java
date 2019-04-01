@@ -39,8 +39,8 @@ import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.launcher.spi.LauncherPrepareContext;
+import org.apache.sling.feature.launcher.spi.extensions.ExtensionContext;
 import org.apache.sling.feature.launcher.spi.extensions.ExtensionHandler;
-import org.apache.sling.feature.launcher.spi.extensions.ExtensionInstallationContext;
 
 public class ContentHandler implements ExtensionHandler {
     public static final String PACKAGEREGISTRY_HOME = "packageregistry.home";
@@ -97,9 +97,8 @@ public class ContentHandler implements ExtensionHandler {
     }
 
     @Override
-    public boolean handle(Extension extension, LauncherPrepareContext prepareContext,
-            ExtensionInstallationContext installationContext) throws Exception {
-        File registryHome = getRegistryHomeDir(installationContext);
+    public boolean handle(ExtensionContext context, Extension extension) throws Exception {
+        File registryHome = getRegistryHomeDir(context);
         if (extension.getType() == ExtensionType.ARTIFACTS
                 && extension.getName().equals(Extension.EXTENSION_NAME_CONTENT_PACKAGES)) {
             MultiValueMap orderedArtifacts = MultiValueMap.decorate(new TreeMap<Integer, Collection<Artifact>>());
@@ -118,7 +117,7 @@ public class ContentHandler implements ExtensionHandler {
             for (Object key : orderedArtifacts.keySet()) {
                 @SuppressWarnings("unchecked")
                 Collection<Artifact> artifacts = orderedArtifacts.getCollection(key);
-                ExecutionPlanBuilder builder = buildExecutionPlan(artifacts, satisfiedPackages,  prepareContext, registryHome);
+                ExecutionPlanBuilder builder = buildExecutionPlan(artifacts, satisfiedPackages, context, registryHome);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 builder.save(baos);
                 executionPlans.add(baos.toString("UTF-8"));
@@ -127,11 +126,11 @@ public class ContentHandler implements ExtensionHandler {
             final Configuration initcfg = new Configuration("org.UNSHADE.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer");
             initcfg.getProperties().put("executionplans", executionPlans.toArray(new String[executionPlans.size()]));
             initcfg.getProperties().put("statusfilepath", registryHome.getAbsolutePath() + "/executedplans.file");
-            installationContext.addConfiguration(initcfg.getPid(), null, initcfg.getProperties());
+            context.addConfiguration(initcfg.getPid(), null, initcfg.getProperties());
             // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
             final Configuration registrycfg = new Configuration("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry");
             registrycfg.getProperties().put("homePath", registryHome.getPath());
-            installationContext.addConfiguration(registrycfg.getPid(), null, registrycfg.getProperties());
+            context.addConfiguration(registrycfg.getPid(), null, registrycfg.getProperties());
 
             return true;
         }
@@ -140,7 +139,7 @@ public class ContentHandler implements ExtensionHandler {
         }
     }
 
-    private File getRegistryHomeDir(ExtensionInstallationContext installationContext) {
+    private File getRegistryHomeDir(ExtensionContext context) {
         //read repository- home from framework properties (throw exception if repo.home not set)
         String registryPath = System.getProperty(PACKAGEREGISTRY_HOME);
         File registryHome;
@@ -148,7 +147,7 @@ public class ContentHandler implements ExtensionHandler {
             registryHome = Paths.get(registryPath).toFile();
 
         } else {
-            String repoHome = installationContext.getFrameworkProperties().get(REPOSITORY_HOME);
+            String repoHome = context.getFrameworkProperties().get(REPOSITORY_HOME);
             if (repoHome == null) {
                 throw new IllegalStateException("Neither registry.home set nor repository.home configured.");
             }

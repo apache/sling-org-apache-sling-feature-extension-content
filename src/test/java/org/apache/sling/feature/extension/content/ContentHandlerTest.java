@@ -18,8 +18,8 @@ package org.apache.sling.feature.extension.content;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -32,8 +32,7 @@ import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
-import org.apache.sling.feature.launcher.spi.LauncherPrepareContext;
-import org.apache.sling.feature.launcher.spi.extensions.ExtensionInstallationContext;
+import org.apache.sling.feature.launcher.spi.extensions.ExtensionContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,10 +50,7 @@ public class ContentHandlerTest {
     public TemporaryFolder testFolder = new TemporaryFolder();
 
     @Mock
-    LauncherPrepareContext prepareContext;
-
-    @Mock
-    ExtensionInstallationContext installationContext;
+    ExtensionContext extensionContext;
 
     /**
      * Test package A-1.0. Depends on B and C-1.X
@@ -80,11 +76,11 @@ public class ContentHandlerTest {
     @Before
     public void setUp() throws Exception {
         URL test_a = this.getClass().getResource(TEST_PACKAGE_A_10);
-        when(prepareContext.getArtifactFile(TEST_PACKAGE_AID_A_10)).thenReturn(new File(test_a.getFile()));
+        when(extensionContext.getArtifactFile(TEST_PACKAGE_AID_A_10)).thenReturn(new File(test_a.getFile()));
         URL test_b = this.getClass().getResource(TEST_PACKAGE_B_10);
-        when(prepareContext.getArtifactFile(TEST_PACKAGE_AID_B_10)).thenReturn(new File(test_b.getFile()));
+        when(extensionContext.getArtifactFile(TEST_PACKAGE_AID_B_10)).thenReturn(new File(test_b.getFile()));
         URL test_c = this.getClass().getResource(TEST_PACKAGE_C_10);
-        when(prepareContext.getArtifactFile(TEST_PACKAGE_AID_C_10)).thenReturn(new File(test_c.getFile()));
+        when(extensionContext.getArtifactFile(TEST_PACKAGE_AID_C_10)).thenReturn(new File(test_c.getFile()));
     }
 
     @Test
@@ -104,9 +100,9 @@ public class ContentHandlerTest {
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Dictionary<String, Object>> executionPlanCaptor = ArgumentCaptor.forClass(Dictionary.class);
 
-        ch.handle(ext, prepareContext, installationContext);
-        verify(installationContext).addConfiguration(eq("org.UNSHADE.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer"), any(), executionPlanCaptor.capture());
-        verify(installationContext).addConfiguration(eq("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry"), any(), any());
+        ch.handle(extensionContext, ext);
+        verify(extensionContext).addConfiguration(eq("org.UNSHADE.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer"), any(), executionPlanCaptor.capture());
+        verify(extensionContext).addConfiguration(eq("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry"), any(), any());
         Iterator<Dictionary<String, Object>> dictIt = executionPlanCaptor.getAllValues().iterator();
         Dictionary<String, Object> dict = dictIt.next();
         final String[] executionplans = (String[]) dict.get("executionplans");
