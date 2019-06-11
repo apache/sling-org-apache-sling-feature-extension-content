@@ -42,6 +42,7 @@ import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.io.IOUtils;
 import org.apache.sling.feature.launcher.spi.LauncherPrepareContext;
 import org.apache.sling.feature.launcher.spi.extensions.ExtensionContext;
 import org.apache.sling.feature.launcher.spi.extensions.ExtensionHandler;
@@ -59,24 +60,12 @@ public class ContentHandler implements ExtensionHandler {
 
         for (final Artifact a : artifacts) {
             final URL file = prepareContext.getArtifactFile(a.getId());
-            File tmp;
-            if (file.getProtocol().equals("file")) {
-                tmp = new File(file.getPath());
-            }
-            else {
-                tmp = File.createTempFile("contenthandler", ".zip");
-                try (FileOutputStream output = new FileOutputStream(tmp); InputStream input = file.openStream()) {
-                    byte[] buffer = new byte[64 * 1024];
-                    for (int i = input.read(buffer); i != -1; i = input.read(buffer)) {
-                        output.write(buffer, 0 ,i);
-                    }
-                }
-            }
+            File tmp = IOUtils.getFileFromURL(file, true, null);
+
             if (tmp.length() > 0)
             {
                 packageReferences.add(tmp);
             }
-
         }
 
         if(!registryHome.exists()) {
