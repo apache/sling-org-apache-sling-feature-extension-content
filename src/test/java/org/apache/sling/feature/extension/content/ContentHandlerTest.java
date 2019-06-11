@@ -76,11 +76,11 @@ public class ContentHandlerTest {
     @Before
     public void setUp() throws Exception {
         URL test_a = this.getClass().getResource(TEST_PACKAGE_A_10);
-        when(extensionContext.getArtifactFile(TEST_PACKAGE_AID_A_10)).thenReturn(new File(test_a.getFile()));
+        when(extensionContext.getArtifactFile(TEST_PACKAGE_AID_A_10)).thenReturn(test_a);
         URL test_b = this.getClass().getResource(TEST_PACKAGE_B_10);
-        when(extensionContext.getArtifactFile(TEST_PACKAGE_AID_B_10)).thenReturn(new File(test_b.getFile()));
+        when(extensionContext.getArtifactFile(TEST_PACKAGE_AID_B_10)).thenReturn(test_b);
         URL test_c = this.getClass().getResource(TEST_PACKAGE_C_10);
-        when(extensionContext.getArtifactFile(TEST_PACKAGE_AID_C_10)).thenReturn(new File(test_c.getFile()));
+        when(extensionContext.getArtifactFile(TEST_PACKAGE_AID_C_10)).thenReturn(test_c);
     }
 
     @Test

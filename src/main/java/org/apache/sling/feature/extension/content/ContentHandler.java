@@ -18,7 +18,11 @@ package org.apache.sling.feature.extension.content;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +42,7 @@ import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionType;
+import org.apache.sling.feature.io.IOUtils;
 import org.apache.sling.feature.launcher.spi.LauncherPrepareContext;
 import org.apache.sling.feature.launcher.spi.extensions.ExtensionContext;
 import org.apache.sling.feature.launcher.spi.extensions.ExtensionHandler;
@@ -51,14 +56,16 @@ public class ContentHandler implements ExtensionHandler {
 
     private static ExecutionPlanBuilder buildExecutionPlan(Collection<Artifact> artifacts, Set<PackageId> satisfiedPackages, LauncherPrepareContext prepareContext, File registryHome) throws Exception {
 
-        List<File> packageReferences = new ArrayList<File>();
+        List<File> packageReferences = new ArrayList<>();
 
         for (final Artifact a : artifacts) {
-            final File file = prepareContext.getArtifactFile(a.getId());
-            if (file.exists() && file.length() > 0) {
-                packageReferences.add(file);
-            }
+            final URL file = prepareContext.getArtifactFile(a.getId());
+            File tmp = IOUtils.getFileFromURL(file, true, null);
 
+            if (tmp.length() > 0)
+            {
+                packageReferences.add(tmp);
+            }
         }
 
         if(!registryHome.exists()) {
@@ -71,6 +78,7 @@ public class ContentHandler implements ExtensionHandler {
         builder.with(satisfiedPackages);
 
         for (File pkgFile : packageReferences) {
+
             PackageId pid = registry.registerExternal(pkgFile, true);
             extractSubPackages(registry, builder, pid);
 
