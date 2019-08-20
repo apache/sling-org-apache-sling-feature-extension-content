@@ -105,6 +105,11 @@ public class ContentHandler implements ExtensionHandler {
     }
 
     @Override
+    public int getPriority() {
+        return 100;
+    }
+
+    @Override
     public boolean handle(ExtensionContext context, Extension extension) throws Exception {
         File registryHome = getRegistryHomeDir(context);
         if (extension.getType() == ExtensionType.ARTIFACTS
