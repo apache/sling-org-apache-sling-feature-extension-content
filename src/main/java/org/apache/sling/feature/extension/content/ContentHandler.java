@@ -18,10 +18,7 @@ package org.apache.sling.feature.extension.content;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -32,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.commons.collections.map.MultiValueMap;
 import org.apache.jackrabbit.vault.packaging.PackageId;
 import org.apache.jackrabbit.vault.packaging.SubPackageHandling;
 import org.apache.jackrabbit.vault.packaging.registry.ExecutionPlanBuilder;
@@ -109,7 +105,7 @@ public class ContentHandler implements ExtensionHandler {
         File registryHome = getRegistryHomeDir(context);
         if (extension.getType() == ExtensionType.ARTIFACTS
                 && extension.getName().equals(Extension.EXTENSION_NAME_CONTENT_PACKAGES)) {
-            MultiValueMap orderedArtifacts = MultiValueMap.decorate(new TreeMap<Integer, Collection<Artifact>>());
+            Map<Integer, Collection<Artifact>> orderedArtifacts = new TreeMap<>();
             for (final Artifact a : extension.getArtifacts()) {
                 int order;
                 // content-packages without explicit start-order to be installed last
@@ -118,20 +114,19 @@ public class ContentHandler implements ExtensionHandler {
                 } else {
                     order = Integer.MAX_VALUE;
                 }
-                orderedArtifacts.put(order, a);
+                orderedArtifacts.computeIfAbsent(order, id -> new ArrayList<>()).add(a);
             }
             List<String> executionPlans = new ArrayList<String>();
             Set<PackageId> satisfiedPackages = new HashSet<>();
             for (Object key : orderedArtifacts.keySet()) {
-                @SuppressWarnings("unchecked")
-                Collection<Artifact> artifacts = orderedArtifacts.getCollection(key);
+                Collection<Artifact> artifacts = orderedArtifacts.get(key);
                 ExecutionPlanBuilder builder = buildExecutionPlan(artifacts, satisfiedPackages, context, registryHome);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 builder.save(baos);
                 executionPlans.add(baos.toString("UTF-8"));
             }
             // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
-            final Configuration initcfg = new Configuration("org.UNSHADE.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer");
+            final Configuration initcfg = new Configuration("org.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer");
             initcfg.getProperties().put("executionplans", executionPlans.toArray(new String[executionPlans.size()]));
             initcfg.getProperties().put("statusfilepath", registryHome.getAbsolutePath() + "/executedplans.file");
             context.addConfiguration(initcfg.getPid(), null, initcfg.getProperties());
@@ -141,8 +136,7 @@ public class ContentHandler implements ExtensionHandler {
             context.addConfiguration(registrycfg.getPid(), null, registrycfg.getProperties());
 
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }

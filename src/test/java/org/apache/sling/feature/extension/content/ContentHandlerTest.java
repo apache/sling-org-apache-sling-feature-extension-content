@@ -31,6 +31,7 @@ import java.util.Iterator;
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.ArtifactId;
 import org.apache.sling.feature.Extension;
+import org.apache.sling.feature.ExtensionState;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.launcher.spi.extensions.ExtensionContext;
 import org.junit.Before;
@@ -87,7 +88,7 @@ public class ContentHandlerTest {
     public void testMultipleStartOrders() throws Exception {
         ContentHandler ch = new ContentHandler();
         System.setProperty(ContentHandler.PACKAGEREGISTRY_HOME, testFolder.getRoot().toString());
-        Extension ext = new Extension(ExtensionType.ARTIFACTS, "content-packages", false);
+        Extension ext = new Extension(ExtensionType.ARTIFACTS, "content-packages", ExtensionState.OPTIONAL);
         Artifact artifact_a = new Artifact(TEST_PACKAGE_AID_A_10);
         Artifact artifact_b = new Artifact(TEST_PACKAGE_AID_B_10);
         Artifact artifact_c = new Artifact(TEST_PACKAGE_AID_C_10);
@@ -101,7 +102,7 @@ public class ContentHandlerTest {
         ArgumentCaptor<Dictionary<String, Object>> executionPlanCaptor = ArgumentCaptor.forClass(Dictionary.class);
 
         ch.handle(extensionContext, ext);
-        verify(extensionContext).addConfiguration(eq("org.UNSHADE.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer"), any(), executionPlanCaptor.capture());
+        verify(extensionContext).addConfiguration(eq("org.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer"), any(), executionPlanCaptor.capture());
         verify(extensionContext).addConfiguration(eq("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry"), any(), any());
         Iterator<Dictionary<String, Object>> dictIt = executionPlanCaptor.getAllValues().iterator();
         Dictionary<String, Object> dict = dictIt.next();
