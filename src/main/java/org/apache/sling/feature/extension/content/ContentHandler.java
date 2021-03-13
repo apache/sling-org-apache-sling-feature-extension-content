@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.jackrabbit.vault.packaging.PackageId;
+import org.apache.jackrabbit.vault.packaging.PackageExistsException;
 import org.apache.jackrabbit.vault.packaging.SubPackageHandling;
 import org.apache.jackrabbit.vault.packaging.registry.ExecutionPlanBuilder;
 import org.apache.jackrabbit.vault.packaging.registry.PackageTask.Type;
@@ -74,11 +75,14 @@ public class ContentHandler implements ExtensionHandler {
         builder.with(satisfiedPackages);
 
         for (File pkgFile : packageReferences) {
+            try {
+                PackageId pid = registry.registerExternal(pkgFile, false);
+                extractSubPackages(registry, builder, pid);
 
-            PackageId pid = registry.registerExternal(pkgFile, true);
-            extractSubPackages(registry, builder, pid);
-
-            builder.addTask().with(pid).with(Type.EXTRACT);
+                builder.addTask().with(pid).with(Type.EXTRACT);
+            } catch (PackageExistsException ex) {
+                // Expected - the package is already present
+            }
         }
         builder.validate();
         satisfiedPackages.addAll(builder.preview());
