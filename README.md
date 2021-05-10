@@ -6,4 +6,4 @@
 
 This module is part of the [Apache Sling](https://sling.apache.org) project.
 
-This project is about creating an Extension to the Sling Featuremodel Launcher to be able to precalculate a FSPackageRegistry and inject precalculated Executionplans to be deployed into the repository during startup.
+This module extends the Sling Featuremodel Launcher with [content package](https://jackrabbit.apache.org/filevault/index.html) capabilities. It allows to fill a [`FSPackageRegistry`](https://jackrabbit.apache.org/filevault/apidocs/org/apache/jackrabbit/vault/packaging/registry/impl/FSPackageRegistry.html) with precalculated execution plans (via OSGi configuration) which automatically get executed during repository start by [ExecutionPlanRepoInitializer](https://github.com/apache/sling-org-apache-sling-jcr-packageinit/blob/master/src/main/java/org/apache/sling/jcr/packageinit/impl/ExecutionPlanRepoInitializer.java)
