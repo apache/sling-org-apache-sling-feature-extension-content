@@ -113,15 +113,36 @@ public class ContentHandlerTest {
         final String expected_0 =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                         "<executionPlan version=\"1.0\">\n" +
-                        "    <task cmd=\"extract\" packageId=\"my_packages:test_c:1.0\"/>\n" +
-                        "    <task cmd=\"extract\" packageId=\"my_packages:test_b:1.0\"/>\n" +
+                        "    <task cmd=\"extract\" packageId=\"my_packages:test_c:1.0\">\n" +
+                        "        <options type=\"ImportOptions\">\n" +
+                        "            <isStrict>true</isStrict>\n" +
+                        "            <autoSaveThreshold>-1</autoSaveThreshold>\n" +
+                        "            <nonRecursive>false</nonRecursive>\n" +
+                        "            <dryRun>false</dryRun>\n" +
+                        "        </options>\n" +
+                        "    </task>\n" +
+                        "    <task cmd=\"extract\" packageId=\"my_packages:test_b:1.0\">\n" +
+                        "        <options type=\"ImportOptions\">\n" +
+                        "            <isStrict>true</isStrict>\n" +
+                        "            <autoSaveThreshold>-1</autoSaveThreshold>\n" +
+                        "            <nonRecursive>false</nonRecursive>\n" +
+                        "            <dryRun>false</dryRun>\n" +
+                        "        </options>\n" +
+                        "    </task>\n" +
                         "</executionPlan>\n";
 
         assertEquals(expected_0, executionplans[0]);
         final String expected_1 =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                         "<executionPlan version=\"1.0\">\n" +
-                        "    <task cmd=\"extract\" packageId=\"my_packages:test_a:1.0\"/>\n" +
+                        "    <task cmd=\"extract\" packageId=\"my_packages:test_a:1.0\">\n" +
+                        "        <options type=\"ImportOptions\">\n" +
+                        "            <isStrict>true</isStrict>\n" +
+                        "            <autoSaveThreshold>-1</autoSaveThreshold>\n" +
+                        "            <nonRecursive>false</nonRecursive>\n" +
+                        "            <dryRun>false</dryRun>\n" +
+                        "        </options>\n" +
+                        "    </task>\n" +
                         "</executionPlan>\n";
 
         assertEquals(expected_1, executionplans[1]);
