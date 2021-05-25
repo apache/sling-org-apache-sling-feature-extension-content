@@ -60,7 +60,7 @@
                         <configuration>
                             <minimizeJar>true</minimizeJar>
                             <relocations>
-                                <!-- shade and relocate all "provided" dependencies (which are not coming with the launcher) -->
+                                <!-- shade and relocate all "compile" scope dependencies (which are not coming with the launcher) -->
                                 <relocation>
                                     <pattern>org.apache.jackrabbit</pattern>
                                     <shadedPattern>${relocated.package.prefix}org.apache.jackrabbit</shadedPattern>
