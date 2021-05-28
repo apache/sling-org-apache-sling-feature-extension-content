@@ -58,7 +58,6 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <minimizeJar>true</minimizeJar>
                             <relocations>
                                 <!-- shade and relocate all "compile" scope dependencies (which are not coming with the launcher) -->
                                 <relocation>
@@ -74,8 +73,20 @@
                                     <shadedPattern>${relocated.package.prefix}org.apache.commons</shadedPattern>
                                 </relocation>
                                 <relocation>
+                                    <pattern>org.apache.http</pattern>
+                                    <shadedPattern>${relocated.package.prefix}org.apache.http</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>org.apache.maven.artifact</pattern>
                                     <shadedPattern>${relocated.package.prefix}org.apache.maven.artifact</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.maven.repository</pattern>
+                                    <shadedPattern>${relocated.package.prefix}org.apache.maven.repository</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.codehaus.plexus.util</pattern>
+                                    <shadedPattern>${relocated.package.prefix}org.codehaus.plexus.util</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.codehaus.stax2</pattern>
@@ -90,8 +101,12 @@
                                     <shadedPattern>${relocated.package.prefix}com.ctc.wstx</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>sun.xml.txw2</pattern>
-                                    <shadedPattern>${relocated.package.prefix}sun.xml.txw2</shadedPattern>
+                                    <pattern>com.sun.xml.txw2</pattern>
+                                    <shadedPattern>${relocated.package.prefix}com.sun.xml.txw2</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>javax.jcr</pattern>
+                                    <shadedPattern>${relocated.package.prefix}javax.jcr</shadedPattern>
                                 </relocation>
                                 <!-- This is required for the OSGi configuration PIDs used in the code, otherwise they get shaded as well -->
                                 <relocation>
