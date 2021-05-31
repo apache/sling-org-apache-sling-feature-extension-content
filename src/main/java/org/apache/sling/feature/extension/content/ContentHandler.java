@@ -18,7 +18,6 @@ package org.apache.sling.feature.extension.content;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -29,12 +28,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.apache.jackrabbit.vault.packaging.PackageId;
+import org.apache.jackrabbit.vault.fs.io.ImportOptions;
 import org.apache.jackrabbit.vault.packaging.PackageExistsException;
-import org.apache.jackrabbit.vault.packaging.SubPackageHandling;
+import org.apache.jackrabbit.vault.packaging.PackageId;
 import org.apache.jackrabbit.vault.packaging.registry.ExecutionPlanBuilder;
 import org.apache.jackrabbit.vault.packaging.registry.PackageTask.Type;
+import org.apache.jackrabbit.vault.packaging.registry.PackageTaskOptions;
+import org.apache.jackrabbit.vault.packaging.registry.impl.AbstractPackageRegistry.SecurityConfig;
 import org.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry;
+import org.apache.jackrabbit.vault.packaging.registry.impl.InstallationScope;
+import org.apache.jackrabbit.vault.packaging.registry.taskoption.ImportOptionsPackageTaskOption;
 import org.apache.sling.feature.Artifact;
 import org.apache.sling.feature.Configuration;
 import org.apache.sling.feature.Extension;
@@ -58,18 +61,16 @@ public class ContentHandler implements ExtensionHandler {
         for (final Artifact a : artifacts) {
             final URL file = prepareContext.getArtifactFile(a.getId());
             File tmp = IOUtils.getFileFromURL(file, true, null);
-
-            if (tmp.length() > 0)
-            {
+            if (tmp != null) {
                 packageReferences.add(tmp);
             }
         }
 
-        if(!registryHome.exists()) {
+        if (!registryHome.exists()) {
             registryHome.mkdirs();
         }
 
-        FSPackageRegistry registry = new FSPackageRegistry(registryHome);
+        FSPackageRegistry registry = new FSPackageRegistry(registryHome, InstallationScope.UNSCOPED, new SecurityConfig(null, null), true);
 
         ExecutionPlanBuilder builder = registry.createExecutionPlan();
         builder.with(satisfiedPackages);
@@ -77,9 +78,10 @@ public class ContentHandler implements ExtensionHandler {
         for (File pkgFile : packageReferences) {
             try {
                 PackageId pid = registry.registerExternal(pkgFile, false);
-                extractSubPackages(registry, builder, pid);
-
-                builder.addTask().with(pid).with(Type.EXTRACT);
+                ImportOptions importOptions = new ImportOptions();
+                importOptions.setStrict(true);
+                PackageTaskOptions options = new ImportOptionsPackageTaskOption(importOptions);
+                builder.addTask().with(pid).withOptions(options).with(Type.EXTRACT);
             } catch (PackageExistsException ex) {
                 // Expected - the package is already present
             }
@@ -88,20 +90,6 @@ public class ContentHandler implements ExtensionHandler {
         satisfiedPackages.addAll(builder.preview());
         return builder;
 
-    }
-
-    private static void extractSubPackages(FSPackageRegistry registry, ExecutionPlanBuilder builder, PackageId pid)
-            throws IOException {
-        Map<PackageId, SubPackageHandling.Option> subPkgs = registry.getInstallState(pid).getSubPackages();
-        if (!subPkgs.isEmpty()) {
-            for (PackageId subId : subPkgs.keySet()) {
-                SubPackageHandling.Option opt = subPkgs.get(subId);
-                if (opt != SubPackageHandling.Option.IGNORE) {
-                    builder.addTask().with(subId).with(Type.EXTRACT);
-                    extractSubPackages(registry, builder, subId);
-                }
-            }
-        }
     }
 
     @Override
@@ -120,7 +108,7 @@ public class ContentHandler implements ExtensionHandler {
                 }
                 orderedArtifacts.computeIfAbsent(order, id -> new ArrayList<>()).add(a);
             }
-            List<String> executionPlans = new ArrayList<String>();
+            List<String> executionPlans = new ArrayList<>();
             Set<PackageId> satisfiedPackages = new HashSet<>();
             for (Object key : orderedArtifacts.keySet()) {
                 Collection<Artifact> artifacts = orderedArtifacts.get(key);
@@ -163,7 +151,7 @@ public class ContentHandler implements ExtensionHandler {
             registryHome.mkdirs();
         }
         if (!registryHome.isDirectory()) {
-            throw new IllegalStateException("Registry but points to file - must be directory");
+            throw new IllegalStateException("Registry home points to file - must be directory: " + registryHome);
         }
         return registryHome;
     }

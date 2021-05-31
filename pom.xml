@@ -40,6 +40,9 @@
     <properties>
         <jdk.version>8</jdk.version>
         <surefire.plugin.version>3.0.0-M3</surefire.plugin.version>
+        <jackrabbit.version>2.18.0</jackrabbit.version>
+        <!-- must be unique to prevent classloader clashes in the loader -->
+        <relocated.package.prefix>relocated-for-contentpackage.</relocated.package.prefix>
     </properties>
 
 
@@ -55,22 +58,62 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                          <minimizeJar>true</minimizeJar>
-                          <relocations>
-                            <relocation>
-                              <pattern>org.apache.jackrabbit</pattern>
-                              <shadedPattern>shaded.org.apache.jackrabbit</shadedPattern>
-                            </relocation>
-                            <relocation>
-                              <pattern>org.apache.commons</pattern>
-                              <shadedPattern>shaded.org.apache.commons</shadedPattern>
-                            </relocation>
-			    <!-- This is required for the OSGi configuration PIDs used in the code, otherwise they get shaded as well -->
-			    <relocation>
-                              <pattern>org.UNSHADE.apache</pattern>
-                              <shadedPattern>org.apache</shadedPattern>
-                            </relocation>
-                          </relocations>
+                            <relocations>
+                                <!-- shade and relocate all "compile" scope dependencies (which are not coming with the launcher) -->
+                                <relocation>
+                                    <pattern>org.apache.jackrabbit</pattern>
+                                    <shadedPattern>${relocated.package.prefix}org.apache.jackrabbit</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons</pattern>
+                                    <shadedPattern>${relocated.package.prefix}org.apache.commons</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons</pattern>
+                                    <shadedPattern>${relocated.package.prefix}org.apache.commons</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.http</pattern>
+                                    <shadedPattern>${relocated.package.prefix}org.apache.http</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.maven.artifact</pattern>
+                                    <shadedPattern>${relocated.package.prefix}org.apache.maven.artifact</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.maven.repository</pattern>
+                                    <shadedPattern>${relocated.package.prefix}org.apache.maven.repository</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.codehaus.plexus.util</pattern>
+                                    <shadedPattern>${relocated.package.prefix}org.codehaus.plexus.util</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.codehaus.stax2</pattern>
+                                    <shadedPattern>${relocated.package.prefix}org.codehaus.stax2</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.codehaus.stax2</pattern>
+                                    <shadedPattern>${relocated.package.prefix}org.codehaus.stax2</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.ctc.wstx</pattern>
+                                    <shadedPattern>${relocated.package.prefix}com.ctc.wstx</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.sun.xml.txw2</pattern>
+                                    <shadedPattern>${relocated.package.prefix}com.sun.xml.txw2</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>javax.jcr</pattern>
+                                    <shadedPattern>${relocated.package.prefix}javax.jcr</shadedPattern>
+                                </relocation>
+                                <!-- This is required for the OSGi configuration PIDs used in the code, otherwise they get shaded as well -->
+                                <relocation>
+                                    <pattern>org.UNSHADE.apache</pattern>
+                                    <shadedPattern>org.apache</shadedPattern>
+                                </relocation>
+                            </relocations>
                         </configuration>
                     </execution>
                 </executions>
@@ -88,11 +131,6 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>javax.jcr</groupId>
-            <artifactId>jcr</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.feature</artifactId>
             <version>1.2.14</version>
@@ -101,20 +139,52 @@
         <dependency>
             <groupId>org.apache.jackrabbit.vault</groupId>
             <artifactId>org.apache.jackrabbit.vault</artifactId>
-            <version>3.2.6</version>
+            <version>3.5.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- START: transitive dependencies with scope "provided" of vault -->
+        <!-- jackrabbit -->
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>oak-jackrabbit-api</artifactId>
+            <version>1.38.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.feature.launcher</artifactId>
-            <version>1.1.10</version>
-            <scope>provided</scope>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-jcr-commons</artifactId>
+            <version>${jackrabbit.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-spi-commons</artifactId>
-            <version>2.17.3</version>
+            <version>${jackrabbit.version}</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-spi</artifactId>
+            <version>${jackrabbit.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-spi2dav</artifactId>
+            <version>${jackrabbit.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.jcr</groupId>
+            <artifactId>jcr</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.framework</artifactId>
+            <version>1.8.0</version>
+            <!-- provided by launcher -->
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -122,24 +192,15 @@
             <version>2.6</version>
             <scope>compile</scope>
         </dependency>
+        <!-- END: transitive dependencies with scope "provided" of vault -->
+
         <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.2</version>
-            <scope>compile</scope>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.feature.launcher</artifactId>
+            <version>1.1.10</version>
+            <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-jcr-commons</artifactId>
-            <version>2.17.3</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-spi</artifactId>
-            <version>2.17.3</version>
-            <scope>compile</scope>
-        </dependency>
+        
         <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
