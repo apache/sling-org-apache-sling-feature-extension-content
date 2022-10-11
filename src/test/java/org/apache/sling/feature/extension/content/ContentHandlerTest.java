@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,6 +36,7 @@ import org.apache.sling.feature.Extension;
 import org.apache.sling.feature.ExtensionState;
 import org.apache.sling.feature.ExtensionType;
 import org.apache.sling.feature.launcher.spi.extensions.ExtensionContext;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,6 +45,8 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
+import org.slf4j.Logger;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ContentHandlerTest {
@@ -148,4 +153,28 @@ public class ContentHandlerTest {
         assertEquals(expected_1, executionplans[1]);
         assertFalse(dictIt.hasNext());
     }
+
+    @Test
+    public void testSkipBuilding() throws Exception {
+        ContentHandler ch = spy(new ContentHandler());
+        System.setProperty(ContentHandler.PACKAGEREGISTRY_HOME, testFolder.getRoot().toString());
+        System.setProperty(ContentHandler.SKIP_EXECUTIONPLANS_PROP, "true");
+        Extension ext = new Extension(ExtensionType.ARTIFACTS, "content-packages", ExtensionState.OPTIONAL);
+        
+        Artifact artifact_a = new Artifact(TEST_PACKAGE_AID_A_10);
+        Artifact artifact_b = new Artifact(TEST_PACKAGE_AID_B_10);
+        Artifact artifact_c = new Artifact(TEST_PACKAGE_AID_C_10);
+        ext.getArtifacts().add(artifact_a);
+        ext.getArtifacts().add(artifact_b);
+        ext.getArtifacts().add(artifact_c);
+
+        Logger log = mock(Logger.class);
+        when(extensionContext.getLogger()).thenReturn(log);
+
+        ch.handle(extensionContext, ext);
+        ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class); 
+        verify(log).info(argumentCaptor.capture());
+        Assert.assertEquals(ContentHandler.SKIP_EXECUTIONPLANS_MSG, argumentCaptor.getValue());
+    }
+    
 }
