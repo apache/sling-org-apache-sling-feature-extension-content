@@ -52,7 +52,7 @@ import org.apache.sling.feature.launcher.spi.extensions.ExtensionHandler;
 public class ContentHandler implements ExtensionHandler {
     static final String SKIP_EXECUTIONPLANS_MSG = "ContentHandler set up to skip building of executionplans - only configuring FSPackageRegistry";
     public static final String PACKAGEREGISTRY_HOME = "packageregistry.home";
-    public static final String SKIP_EXECUTIONPLANS_PROP = "skipxecutionplans";
+    public static final String SKIP_EXECUTIONPLANS_PROP = "skipexecutionplans";
 
     private static final String REPOSITORY_HOME = "repository.home";
 
