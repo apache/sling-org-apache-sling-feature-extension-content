@@ -18,6 +18,7 @@ package org.apache.sling.feature.extension.content;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.jackrabbit.vault.fs.io.ImportOptions;
+import org.apache.jackrabbit.vault.packaging.PackageException;
 import org.apache.jackrabbit.vault.packaging.PackageExistsException;
 import org.apache.jackrabbit.vault.packaging.PackageId;
 import org.apache.jackrabbit.vault.packaging.registry.ExecutionPlanBuilder;
@@ -48,13 +50,15 @@ import org.apache.sling.feature.launcher.spi.extensions.ExtensionContext;
 import org.apache.sling.feature.launcher.spi.extensions.ExtensionHandler;
 
 public class ContentHandler implements ExtensionHandler {
+    static final String SKIP_EXECUTIONPLANS_MSG = "ContentHandler set up to skip building of executionplans - only configuring FSPackageRegistry";
     public static final String PACKAGEREGISTRY_HOME = "packageregistry.home";
+    public static final String SKIP_EXECUTIONPLANS_PROP = "skipexecutionplans";
 
     private static final String REPOSITORY_HOME = "repository.home";
 
     private static final String REGISTRY_FOLDER = "packageregistry";
 
-    private static ExecutionPlanBuilder buildExecutionPlan(Collection<Artifact> artifacts, Set<PackageId> satisfiedPackages, LauncherPrepareContext prepareContext, File registryHome) throws Exception {
+    static ExecutionPlanBuilder buildExecutionPlan(Collection<Artifact> artifacts, Set<PackageId> satisfiedPackages, LauncherPrepareContext prepareContext, File registryHome) throws IOException, PackageException  {
 
         List<File> packageReferences = new ArrayList<>();
 
@@ -97,40 +101,59 @@ public class ContentHandler implements ExtensionHandler {
         File registryHome = getRegistryHomeDir(context);
         if (extension.getType() == ExtensionType.ARTIFACTS
                 && extension.getName().equals(Extension.EXTENSION_NAME_CONTENT_PACKAGES)) {
-            Map<Integer, Collection<Artifact>> orderedArtifacts = new TreeMap<>();
-            for (final Artifact a : extension.getArtifacts()) {
-                int order;
-                // content-packages without explicit start-order to be installed last
-                if (a.getMetadata().get(Artifact.KEY_START_ORDER) != null) {
-                    order = a.getStartOrder();
-                } else {
-                    order = Integer.MAX_VALUE;
+            if(skipBuildExecutionPlans()){
+                context.getLogger().info(SKIP_EXECUTIONPLANS_MSG);
+            } else {
+                List<String> executionPlans = new ArrayList<>();
+                Map<Integer, Collection<Artifact>> orderedArtifacts = getOrderedArtifacts(extension);
+                Set<PackageId> satisfiedPackages = new HashSet<>();
+                for (Collection<Artifact> artifacts : orderedArtifacts.values()) {
+                    ExecutionPlanBuilder builder = buildExecutionPlan(artifacts, satisfiedPackages, context, registryHome);
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    builder.save(baos);
+                    executionPlans.add(baos.toString("UTF-8"));
                 }
-                orderedArtifacts.computeIfAbsent(order, id -> new ArrayList<>()).add(a);
+                configurePackageInit(context, registryHome, executionPlans);
             }
-            List<String> executionPlans = new ArrayList<>();
-            Set<PackageId> satisfiedPackages = new HashSet<>();
-            for (Object key : orderedArtifacts.keySet()) {
-                Collection<Artifact> artifacts = orderedArtifacts.get(key);
-                ExecutionPlanBuilder builder = buildExecutionPlan(artifacts, satisfiedPackages, context, registryHome);
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                builder.save(baos);
-                executionPlans.add(baos.toString("UTF-8"));
-            }
-            // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
-            final Configuration initcfg = new Configuration("org.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer");
-            initcfg.getProperties().put("executionplans", executionPlans.toArray(new String[executionPlans.size()]));
-            initcfg.getProperties().put("statusfilepath", registryHome.getAbsolutePath() + "/executedplans.file");
-            context.addConfiguration(initcfg.getPid(), null, initcfg.getProperties());
-            // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
-            final Configuration registrycfg = new Configuration("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry");
-            registrycfg.getProperties().put("homePath", registryHome.getPath());
-            context.addConfiguration(registrycfg.getPid(), null, registrycfg.getProperties());
-
+            configureFSRegistry(context, registryHome);
             return true;
         } else {
             return false;
         }
+    }
+
+    private Map<Integer, Collection<Artifact>> getOrderedArtifacts(Extension extension) {
+        Map<Integer, Collection<Artifact>> orderedArtifacts = new TreeMap<>();
+        for (final Artifact a : extension.getArtifacts()) {
+            int order;
+            // content-packages without explicit start-order to be installed last
+            if (a.getMetadata().get(Artifact.KEY_START_ORDER) != null) {
+                order = a.getStartOrder();
+            } else {
+                order = Integer.MAX_VALUE;
+            }
+            orderedArtifacts.computeIfAbsent(order, id -> new ArrayList<>()).add(a);
+        }
+        return orderedArtifacts;
+    }
+
+    private void configureFSRegistry(ExtensionContext context, File registryHome) {
+         // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
+        final Configuration registrycfg = new Configuration("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry");
+        registrycfg.getProperties().put("homePath", registryHome.getPath());
+        context.addConfiguration(registrycfg.getPid(), null, registrycfg.getProperties());
+    }
+
+    private void configurePackageInit(ExtensionContext context, File registryHome, List<String> executionPlans) {
+         // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
+        final Configuration initcfg = new Configuration("org.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer");
+        initcfg.getProperties().put("executionplans", executionPlans.toArray(new String[executionPlans.size()]));
+        initcfg.getProperties().put("statusfilepath", registryHome.getAbsolutePath() + "/executedplans.file");
+        context.addConfiguration(initcfg.getPid(), null, initcfg.getProperties());
+    }
+
+    private boolean skipBuildExecutionPlans() {
+        return Boolean.getBoolean(SKIP_EXECUTIONPLANS_PROP);
     }
 
     private File getRegistryHomeDir(ExtensionContext context) {
