@@ -120,7 +120,7 @@ public class ContentHandler implements ExtensionHandler {
             // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
             final Configuration initcfg = new Configuration("org.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer");
             initcfg.getProperties().put("executionplans", executionPlans.toArray(new String[executionPlans.size()]));
-            initcfg.getProperties().put("statusfilepath", registryHome.getAbsolutePath() + "/executedplans.file");
+            initcfg.getProperties().put("statusfilepath", registryHome.getAbsolutePath() + File.separator + "executedplans.file");
             context.addConfiguration(initcfg.getPid(), null, initcfg.getProperties());
             // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
             final Configuration registrycfg = new Configuration("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry");
