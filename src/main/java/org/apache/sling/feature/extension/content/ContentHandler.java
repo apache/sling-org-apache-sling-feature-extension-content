@@ -19,6 +19,7 @@ package org.apache.sling.feature.extension.content;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -113,12 +114,11 @@ public class ContentHandler implements ExtensionHandler {
             }
             List<String> executionPlans = new ArrayList<>();
             Set<PackageId> satisfiedPackages = new HashSet<>();
-            for (Object key : orderedArtifacts.keySet()) {
-                Collection<Artifact> artifacts = orderedArtifacts.get(key);
+            for (Collection<Artifact> artifacts : orderedArtifacts.values()) {
                 ExecutionPlanBuilder builder = buildExecutionPlan(artifacts, satisfiedPackages, context, registryHome, useStrictMode);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 builder.save(baos);
-                executionPlans.add(baos.toString("UTF-8"));
+                executionPlans.add(baos.toString(StandardCharsets.UTF_8));
             }
             // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
             final Configuration initcfg = new Configuration("org.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer");
