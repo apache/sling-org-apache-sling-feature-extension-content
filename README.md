@@ -19,3 +19,5 @@ To influence the package installation order the following format must be used
 The default start order is the maximum integer value (i.e. the package is processed after all packages with an explicit start-order).
 
 All content-packages from the model are registered (externally) in a [`FSPackageRegistry`](https://jackrabbit.apache.org/filevault/apidocs/org/apache/jackrabbit/vault/packaging/registry/impl/FSPackageRegistry.html) and scheduled for installation with execution plans (given via OSGi configuration) which automatically get executed during repository start by [ExecutionPlanRepoInitializer](https://github.com/apache/sling-org-apache-sling-jcr-packageinit/blob/master/src/main/java/org/apache/sling/jcr/packageinit/impl/ExecutionPlanRepoInitializer.java)
+
+Strict package mode installation can be enabled for all packages by setting the `org.apache.sling.feature.extension.content.useStrictMode` system property to true.

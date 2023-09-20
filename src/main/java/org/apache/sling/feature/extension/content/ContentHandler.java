@@ -54,7 +54,7 @@ public class ContentHandler implements ExtensionHandler {
 
     private static final String REGISTRY_FOLDER = "packageregistry";
 
-    private static ExecutionPlanBuilder buildExecutionPlan(Collection<Artifact> artifacts, Set<PackageId> satisfiedPackages, LauncherPrepareContext prepareContext, File registryHome) throws Exception {
+    private static ExecutionPlanBuilder buildExecutionPlan(Collection<Artifact> artifacts, Set<PackageId> satisfiedPackages, LauncherPrepareContext prepareContext, File registryHome, boolean useStrictMode) throws Exception {
 
         List<File> packageReferences = new ArrayList<>();
 
@@ -79,7 +79,7 @@ public class ContentHandler implements ExtensionHandler {
             try {
                 PackageId pid = registry.registerExternal(pkgFile, false);
                 ImportOptions importOptions = new ImportOptions();
-                importOptions.setStrict(true);
+                importOptions.setStrict(useStrictMode);
                 PackageTaskOptions options = new ImportOptionsPackageTaskOption(importOptions);
                 builder.addTask().with(pid).withOptions(options).with(Type.EXTRACT);
             } catch (PackageExistsException ex) {
@@ -97,6 +97,9 @@ public class ContentHandler implements ExtensionHandler {
         File registryHome = getRegistryHomeDir(context);
         if (extension.getType() == ExtensionType.ARTIFACTS
                 && extension.getName().equals(Extension.EXTENSION_NAME_CONTENT_PACKAGES)) {
+        	
+        	boolean useStrictMode = Boolean.getBoolean(getClass().getPackageName()+ ".useStrictMode");
+        	
             Map<Integer, Collection<Artifact>> orderedArtifacts = new TreeMap<>();
             for (final Artifact a : extension.getArtifacts()) {
                 int order;
@@ -112,7 +115,7 @@ public class ContentHandler implements ExtensionHandler {
             Set<PackageId> satisfiedPackages = new HashSet<>();
             for (Object key : orderedArtifacts.keySet()) {
                 Collection<Artifact> artifacts = orderedArtifacts.get(key);
-                ExecutionPlanBuilder builder = buildExecutionPlan(artifacts, satisfiedPackages, context, registryHome);
+                ExecutionPlanBuilder builder = buildExecutionPlan(artifacts, satisfiedPackages, context, registryHome, useStrictMode);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 builder.save(baos);
                 executionPlans.add(baos.toString("UTF-8"));
