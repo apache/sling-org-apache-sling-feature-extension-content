@@ -42,7 +42,7 @@
         <surefire.plugin.version>3.0.0-M3</surefire.plugin.version>
         <jackrabbit.version>2.18.0</jackrabbit.version>
         <!-- must be unique to prevent classloader clashes in the loader -->
-        <relocated.package.prefix>relocated-for-contentpackage.</relocated.package.prefix>
+        <relocated.package.prefix>relocated_for_contentpackage.</relocated.package.prefix>
     </properties>
 
 
