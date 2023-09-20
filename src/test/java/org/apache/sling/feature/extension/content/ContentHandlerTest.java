@@ -115,7 +115,7 @@ public class ContentHandlerTest {
                         "<executionPlan version=\"1.0\">\n" +
                         "    <task cmd=\"extract\" packageId=\"my_packages:test_c:1.0\">\n" +
                         "        <options type=\"ImportOptions\">\n" +
-                        "            <isStrict>true</isStrict>\n" +
+                        "            <isStrict>false</isStrict>\n" +
                         "            <autoSaveThreshold>-1</autoSaveThreshold>\n" +
                         "            <nonRecursive>false</nonRecursive>\n" +
                         "            <dryRun>false</dryRun>\n" +
@@ -123,7 +123,7 @@ public class ContentHandlerTest {
                         "    </task>\n" +
                         "    <task cmd=\"extract\" packageId=\"my_packages:test_b:1.0\">\n" +
                         "        <options type=\"ImportOptions\">\n" +
-                        "            <isStrict>true</isStrict>\n" +
+                        "            <isStrict>false</isStrict>\n" +
                         "            <autoSaveThreshold>-1</autoSaveThreshold>\n" +
                         "            <nonRecursive>false</nonRecursive>\n" +
                         "            <dryRun>false</dryRun>\n" +
@@ -137,7 +137,7 @@ public class ContentHandlerTest {
                         "<executionPlan version=\"1.0\">\n" +
                         "    <task cmd=\"extract\" packageId=\"my_packages:test_a:1.0\">\n" +
                         "        <options type=\"ImportOptions\">\n" +
-                        "            <isStrict>true</isStrict>\n" +
+                        "            <isStrict>false</isStrict>\n" +
                         "            <autoSaveThreshold>-1</autoSaveThreshold>\n" +
                         "            <nonRecursive>false</nonRecursive>\n" +
                         "            <dryRun>false</dryRun>\n" +
