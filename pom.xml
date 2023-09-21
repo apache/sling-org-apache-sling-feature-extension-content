@@ -58,6 +58,11 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>org.slf4j:*</exclude>
+                                </excludes>
+                            </artifactSet>
                             <relocations>
                                 <!-- shade and relocate all "compile" scope dependencies (which are not coming with the launcher) -->
                                 <relocation>
