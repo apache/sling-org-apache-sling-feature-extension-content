@@ -19,7 +19,7 @@
 
     <artifactId>org.apache.sling.feature.extension.content</artifactId>
     <version>1.0.13-SNAPSHOT</version>
-    <name>Apache Sling Feature Model Content Exension</name>
+    <name>Apache Sling Feature Model Content Extension</name>
 
     <licenses>
         <!-- This is also in the Apache parent POM, but adding it here includes 
