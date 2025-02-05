@@ -62,7 +62,7 @@ public class ContentHandler implements ExtensionHandler {
         for (final Artifact a : artifacts) {
             final URL file = prepareContext.getArtifactFile(a.getId());
             File tmp = IOUtils.getFileFromURL(file, true, null);
-            if (tmp != null) {
+            if (tmp != null && tmp.length() > 0) {
                 packageReferences.add(tmp);
             }
         }
@@ -98,9 +98,9 @@ public class ContentHandler implements ExtensionHandler {
         File registryHome = getRegistryHomeDir(context);
         if (extension.getType() == ExtensionType.ARTIFACTS
                 && extension.getName().equals(Extension.EXTENSION_NAME_CONTENT_PACKAGES)) {
-        	
+
         	boolean useStrictMode = Boolean.getBoolean(getClass().getPackageName()+ ".useStrictMode");
-        	
+
             Map<Integer, Collection<Artifact>> orderedArtifacts = new TreeMap<>();
             for (final Artifact a : extension.getArtifacts()) {
                 int order;
