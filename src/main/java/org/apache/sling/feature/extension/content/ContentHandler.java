@@ -57,13 +57,13 @@ public class ContentHandler implements ExtensionHandler {
 
     private static ExecutionPlanBuilder buildExecutionPlan(Collection<Artifact> artifacts, Set<PackageId> satisfiedPackages, LauncherPrepareContext prepareContext, File registryHome, boolean useStrictMode) throws Exception {
 
-        List<File> packageReferences = new ArrayList<>();
+        List<PackageReference> packageReferences = new ArrayList<>();
 
         for (final Artifact a : artifacts) {
             final URL file = prepareContext.getArtifactFile(a.getId());
             File tmp = IOUtils.getFileFromURL(file, true, null);
             if (tmp != null && tmp.length() > 0) {
-                packageReferences.add(tmp);
+                packageReferences.add(new PackageReference(tmp, a));
             }
         }
 
@@ -76,9 +76,9 @@ public class ContentHandler implements ExtensionHandler {
         ExecutionPlanBuilder builder = registry.createExecutionPlan();
         builder.with(satisfiedPackages);
 
-        for (File pkgFile : packageReferences) {
+        for (PackageReference pkgRef : packageReferences) {
             try {
-                PackageId pid = registry.registerExternal(pkgFile, false);
+                PackageId pid = registry.registerExternal(pkgRef.file, pkgRef.isSnapshot);
                 ImportOptions importOptions = new ImportOptions();
                 importOptions.setStrict(useStrictMode);
                 PackageTaskOptions options = new ImportOptionsPackageTaskOption(importOptions);
@@ -157,5 +157,15 @@ public class ContentHandler implements ExtensionHandler {
             throw new IllegalStateException("Registry home points to file - must be directory: " + registryHome);
         }
         return registryHome;
+    }
+    
+    static class PackageReference {
+        private File file;
+        private boolean isSnapshot;
+        
+        public PackageReference(File file, Artifact artifact) {
+            this.file = file;
+            this.isSnapshot = artifact.getId().getVersion().endsWith("-SNAPSHOT");
+        }
     }
 }
