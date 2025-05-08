@@ -44,6 +44,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.slf4j.LoggerFactory;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ContentHandlerTest {
@@ -87,7 +88,11 @@ public class ContentHandlerTest {
         when(extensionContext.getArtifactFile(TEST_PACKAGE_AID_C_10)).thenReturn(testC);
         when(extensionContext.getArtifactFile(TEST_PACKAGE_AID_C_10_SNAPSHOT)).thenReturn(testC);
         
+        when(extensionContext.getLogger()).thenReturn(LoggerFactory.getLogger(getClass().getName()));
+        
         System.setProperty(ContentHandler.PACKAGEREGISTRY_HOME, testFolder.getRoot().toString());
+        
+        System.clearProperty(ContentHandler.class.getPackageName()+".reinstallSnapshots");
     }
 
     /**
@@ -111,7 +116,7 @@ public class ContentHandlerTest {
         ext.getArtifacts().add(artifactB);
         ext.getArtifacts().add(artifactC);
         
-        final String[] executionplans = execute(ch, ext);
+        final String[] executionplans = execute(ch, ext, false);
 
         final String expected_0 =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
@@ -168,7 +173,7 @@ public class ContentHandlerTest {
         Artifact artifactC = new Artifact(TEST_PACKAGE_AID_C_10);
         artifactC.getMetadata().put("start-order", "1");
         ext.getArtifacts().add(artifactC);
-        final String[] executionplans = execute(ch, ext);
+        final String[] executionplans = execute(ch, ext, false);
 
         final String expected_0 =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
@@ -180,12 +185,14 @@ public class ContentHandlerTest {
     }
     
     /**
-     * Validates that a SNAPSHOT package that is already registered is included in the execution plan
+     * Validates that a SNAPSHOT package that is already registered is included in the execution plan when the corresponding system property is set.
      * 
      * @throws Exception
      */
     @Test
-    public void duplicateSnapshotPackage() throws Exception {
+    public void duplicateSnapshotPackage_reinstall() throws Exception {
+        
+        System.setProperty(ContentHandler.class.getPackageName()+".reinstallSnapshots", "true");
         
         FSPackageRegistry registry = new FSPackageRegistry(testFolder.getRoot(), InstallationScope.UNSCOPED, new SecurityConfig(null, null), true);
         registry.register(getClass().getResourceAsStream(TEST_PACKAGE_C_10), false);
@@ -196,7 +203,7 @@ public class ContentHandlerTest {
         artifactC.getMetadata().put("start-order", "1");
         ext.getArtifacts().add(artifactC);
         
-        final String[] executionplans = execute(ch, ext);
+        final String[] executionplans = execute(ch, ext, true);
 
         final String expected_0 =
                 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
@@ -213,10 +220,36 @@ public class ContentHandlerTest {
 
         assertEquals(expected_0, executionplans[0]);
         assertEquals(1, executionplans.length);
-        
     }
 
-    private String[] execute(ContentHandler ch, Extension ext) throws Exception {
+    /**
+     * Validates that a SNAPSHOT package that is already registered is included in the execution plan when the corresponding system property is not set.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void duplicateSnapshotPackage_skip() throws Exception {
+        
+        FSPackageRegistry registry = new FSPackageRegistry(testFolder.getRoot(), InstallationScope.UNSCOPED, new SecurityConfig(null, null), true);
+        registry.register(getClass().getResourceAsStream(TEST_PACKAGE_C_10), false);
+        
+        ContentHandler ch = new ContentHandler();
+        Extension ext = new Extension(ExtensionType.ARTIFACTS, "content-packages", ExtensionState.OPTIONAL);
+        Artifact artifactC = new Artifact(TEST_PACKAGE_AID_C_10_SNAPSHOT);
+        artifactC.getMetadata().put("start-order", "1");
+        ext.getArtifacts().add(artifactC);
+        
+        final String[] executionplans = execute(ch, ext, false);
+
+        final String expected_0 =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                        "<executionPlan version=\"1.0\"/>\n";
+
+        assertEquals(expected_0, executionplans[0]);
+        assertEquals(1, executionplans.length);
+    }
+
+    private String[] execute(ContentHandler ch, Extension ext, boolean expectedReinstallSnapshots) throws Exception {
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Dictionary<String, Object>> executionPlanCaptor = ArgumentCaptor.forClass(Dictionary.class);
 
@@ -227,6 +260,8 @@ public class ContentHandlerTest {
         Dictionary<String, Object> dict = dictIt.next();
         final String[] executionplans = (String[]) dict.get("executionplans");
         final String statusFileHome = (String)dict.get("statusfilepath");
+        final Boolean reinstallSnapshots = (Boolean)dict.get("reinstallSnapshots");
+        assertEquals("reinstallSnapshots configuration property", expectedReinstallSnapshots, reinstallSnapshots);
         File executedPlansFile = new File(testFolder.getRoot(), "executedplans.file");
         assertEquals(executedPlansFile.getAbsolutePath(), statusFileHome);
         return executionplans;
