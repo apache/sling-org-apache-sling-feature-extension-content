@@ -49,21 +49,26 @@ import org.apache.sling.feature.launcher.spi.extensions.ExtensionContext;
 import org.apache.sling.feature.launcher.spi.extensions.ExtensionHandler;
 
 public class ContentHandler implements ExtensionHandler {
+    private static final String SYS_PROP_USE_STRICT_MODE = ContentHandler.class.getPackageName()+ ".useStrictMode";
+
+    private static final String SYS_PROP_REINSTALL_SNAPSHOTS = ContentHandler.class.getPackageName()+ ".reinstallSnapshots";
+
     public static final String PACKAGEREGISTRY_HOME = "packageregistry.home";
 
     private static final String REPOSITORY_HOME = "repository.home";
 
     private static final String REGISTRY_FOLDER = "packageregistry";
 
-    private static ExecutionPlanBuilder buildExecutionPlan(Collection<Artifact> artifacts, Set<PackageId> satisfiedPackages, LauncherPrepareContext prepareContext, File registryHome, boolean useStrictMode) throws Exception {
+    private static ExecutionPlanBuilderWithDetails buildExecutionPlan(Collection<Artifact> artifacts, Set<PackageId> satisfiedPackages, LauncherPrepareContext prepareContext, File registryHome, 
+            boolean useStrictMode, boolean reinstallSnapshots) throws Exception {
 
-        List<File> packageReferences = new ArrayList<>();
+        List<PackageReference> packageReferences = new ArrayList<>();
 
         for (final Artifact a : artifacts) {
             final URL file = prepareContext.getArtifactFile(a.getId());
             File tmp = IOUtils.getFileFromURL(file, true, null);
             if (tmp != null && tmp.length() > 0) {
-                packageReferences.add(tmp);
+                packageReferences.add(new PackageReference(tmp, a));
             }
         }
 
@@ -75,10 +80,11 @@ public class ContentHandler implements ExtensionHandler {
 
         ExecutionPlanBuilder builder = registry.createExecutionPlan();
         builder.with(satisfiedPackages);
-
-        for (File pkgFile : packageReferences) {
+        boolean hasAnySnapshot = false;
+        for (PackageReference pkgRef : packageReferences) {
+            hasAnySnapshot |= pkgRef.isSnapshot;
             try {
-                PackageId pid = registry.registerExternal(pkgFile, false);
+                PackageId pid = registry.registerExternal(pkgRef.file, pkgRef.isSnapshot && reinstallSnapshots);
                 ImportOptions importOptions = new ImportOptions();
                 importOptions.setStrict(useStrictMode);
                 PackageTaskOptions options = new ImportOptionsPackageTaskOption(importOptions);
@@ -89,8 +95,8 @@ public class ContentHandler implements ExtensionHandler {
         }
         builder.validate();
         satisfiedPackages.addAll(builder.preview());
-        return builder;
-
+        
+        return new ExecutionPlanBuilderWithDetails(builder, hasAnySnapshot);
     }
 
     @Override
@@ -99,7 +105,8 @@ public class ContentHandler implements ExtensionHandler {
         if (extension.getType() == ExtensionType.ARTIFACTS
                 && extension.getName().equals(Extension.EXTENSION_NAME_CONTENT_PACKAGES)) {
 
-        	boolean useStrictMode = Boolean.getBoolean(getClass().getPackageName()+ ".useStrictMode");
+        	boolean useStrictMode = Boolean.getBoolean(SYS_PROP_USE_STRICT_MODE);
+        	boolean reinstallSnapshots = Boolean.getBoolean(SYS_PROP_REINSTALL_SNAPSHOTS);
 
             Map<Integer, Collection<Artifact>> orderedArtifacts = new TreeMap<>();
             for (final Artifact a : extension.getArtifacts()) {
@@ -114,16 +121,28 @@ public class ContentHandler implements ExtensionHandler {
             }
             List<String> executionPlans = new ArrayList<>();
             Set<PackageId> satisfiedPackages = new HashSet<>();
+            boolean anyPlanIncludesSnapshots = false;
             for (Collection<Artifact> artifacts : orderedArtifacts.values()) {
-                ExecutionPlanBuilder builder = buildExecutionPlan(artifacts, satisfiedPackages, context, registryHome, useStrictMode);
+                ExecutionPlanBuilderWithDetails builderWithDetails = buildExecutionPlan(artifacts, satisfiedPackages, context, registryHome, useStrictMode, reinstallSnapshots);
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                builder.save(baos);
+                builderWithDetails.builder.save(baos);
                 executionPlans.add(baos.toString(StandardCharsets.UTF_8));
+                anyPlanIncludesSnapshots |= builderWithDetails.includesSnapshots;
             }
+            
+            if ( anyPlanIncludesSnapshots ) {
+                if ( reinstallSnapshots ) {
+                    context.getLogger().info("Found at least one SNAPSHOT package - configuring ExecutionPlanRepoInitializer to reprocess all plans that contain SNAPSHOT packages.");
+                } else {
+                    context.getLogger().info("Found at least one SNAPSHOT package but ExecutionPlanRepoInitializer is not configured by default to reinstall SNAPSHOTS. Set system property {} to true to enable.", SYS_PROP_REINSTALL_SNAPSHOTS);
+                }
+            }
+            
             // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
             final Configuration initcfg = new Configuration("org.apache.sling.jcr.packageinit.impl.ExecutionPlanRepoInitializer");
             initcfg.getProperties().put("executionplans", executionPlans.toArray(new String[executionPlans.size()]));
             initcfg.getProperties().put("statusfilepath", registryHome.getAbsolutePath() + File.separator + "executedplans.file");
+            initcfg.getProperties().put("reinstallSnapshots", anyPlanIncludesSnapshots && reinstallSnapshots);
             context.addConfiguration(initcfg.getPid(), null, initcfg.getProperties());
             // Workaround for too bold relocation mechanism - corresponding details at https://issues.apache.org/jira/browse/MSHADE-156
             final Configuration registrycfg = new Configuration("org.UNSHADE.apache.jackrabbit.vault.packaging.registry.impl.FSPackageRegistry");
@@ -157,5 +176,25 @@ public class ContentHandler implements ExtensionHandler {
             throw new IllegalStateException("Registry home points to file - must be directory: " + registryHome);
         }
         return registryHome;
+    }
+    
+    static class PackageReference {
+        private File file;
+        private boolean isSnapshot;
+        
+        public PackageReference(File file, Artifact artifact) {
+            this.file = file;
+            this.isSnapshot = artifact.getId().getVersion().endsWith("-SNAPSHOT");
+        }
+    }
+    
+    static class ExecutionPlanBuilderWithDetails {
+        private ExecutionPlanBuilder builder;
+        private boolean includesSnapshots;
+        
+        public ExecutionPlanBuilderWithDetails(ExecutionPlanBuilder builder, boolean includesSnapshots) {
+            this.builder = builder;
+            this.includesSnapshots = includesSnapshots;
+        }
     }
 }
